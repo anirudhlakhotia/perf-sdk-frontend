@@ -1,6 +1,8 @@
 <template>
   <b-container>
-    <h2 class="mb-4">Situational Runs</h2>
+    <div class="d-flex align-items-center justify-content-between mb-2">
+      <h2 class="mb-0">Situational Runs</h2>
+    </div>
     
     <div class="d-flex justify-content-end mb-4">
       <b-button variant="outline-secondary" @click="refreshData" :disabled="isLoading">
@@ -21,6 +23,10 @@
 
       <div v-else-if="results" key="results">
         <b-card class="shadow-sm">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <div class="text-muted small">Click a run to view details</div>
+            <div class="text-muted small">Total runs: {{ rows }}</div>
+          </div>
           <b-table 
             striped 
             hover 

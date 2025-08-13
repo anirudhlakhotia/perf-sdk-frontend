@@ -23,7 +23,10 @@ else {
 export default defineConfig({
     server: {
         port: 8080,
-        https
+        https,
+        hmr: {
+            clientPort: 443
+        }
     },
     plugins: [
         vue(),
@@ -31,6 +34,7 @@ export default defineConfig({
             resolvers: [BootstrapVueNextResolver()]
         })
     ],
+    base: '/results/',
     resolve: {
         alias: {
             "@": path.resolve(__dirname, "./src"),

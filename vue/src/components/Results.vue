@@ -122,12 +122,12 @@ export default {
       errors: undefined,
       display: false,
       componentKey: 0,
-      isReloading: false
+      isReloading: false,
+      lastRequestId: 0
     }
   },
   mounted() {
-    console.info("Results component mounted");
-    this.forceRerender();
+    // Do not fetch here; watchers with immediate=true handle initial fetch
   },
   unmounted() {
     console.info("Results component unmounted");
@@ -146,11 +146,12 @@ export default {
       if (input !== undefined) {
         this.isReloading = true
         this.lastInput = input
+        const reqId = ++this.lastRequestId
         try {
           console.info("Results fetching...")
           console.info(JSON.stringify(input))
 
-          const res = await fetch(`${document.location.protocol}//${document.location.hostname}:3002/dashboard/query`,
+          const res = await fetch(`/dashboard/query`,
               {
                 headers: {
                   'Accept': 'application/json',
@@ -160,10 +161,13 @@ export default {
                 body: JSON.stringify(input)
               })
 
-          if (res.status.toString().startsWith('2')) {
-            this.results = await res.json();
-          } else {
-            this.errors = await res.json()
+          if (reqId === this.lastRequestId) {
+            if (res.status.toString().startsWith('2')) {
+              this.results = await res.json();
+            } else {
+              const err = await res.json().catch(() => ({ message: res.statusText }))
+              this.errors = err?.message || JSON.stringify(err) || `HTTP ${res.status}`
+            }
           }
         } finally {
           this.isReloading = false
@@ -175,9 +179,10 @@ export default {
 
     fetchSingleQuery: async function (input) {
       this.isReloading = true
+      const reqId = ++this.lastRequestId
       try {
         console.info("Fetching single query with input:", JSON.stringify(input));
-        const res = await fetch(`${document.location.protocol}//${document.location.hostname}:3002/dashboard/single`,
+        const res = await fetch(`/dashboard/single`,
             {
               headers: {
                 'Accept': 'application/json',
@@ -187,10 +192,13 @@ export default {
               body: JSON.stringify(input)
             })
 
-        if (res.status.toString().startsWith('2')) {
-          this.results = await res.json();
-        } else {
-          this.errors = await res.json()
+        if (reqId === this.lastRequestId) {
+          if (res.status.toString().startsWith('2')) {
+            this.results = await res.json();
+          } else {
+            const err = await res.json().catch(() => ({ message: res.statusText }))
+            this.errors = err?.message || JSON.stringify(err) || `HTTP ${res.status}`
+          }
         }
       } finally {
         this.isReloading = false
@@ -216,32 +224,24 @@ export default {
     },
 
     forceRerender() {
-      this.componentKey += 1;
-      this.results = undefined;
-      this.errors = undefined;
-      
-      if (this.single) {
-        this.fetchSingleQuery(this.single);
-      } else if (this.input) {
-        this.fetchQuery(this.input);
+      this.componentKey += 1
+      this.results = undefined
+      this.errors = undefined
+      if (this.single && !this.input) {
+        this.fetchSingleQuery(this.single)
+      } else if (this.input && !this.single) {
+        this.fetchQuery(this.input)
       }
     }
   },
   props: ['input', 'single'],
   watch: {
     input: {
-      handler(newInput, oldInput) {
-        if (newInput) {
-          // Clear previous results first
-          this.results = undefined;
-          this.errors = undefined;
-          
-          // Then fetch new data
-          if (this.single) {
-            this.fetchSingleQuery(this.single);
-          } else {
-            this.fetchQuery(newInput);
-          }
+      handler(newInput) {
+        if (newInput && !this.single) {
+          this.results = undefined
+          this.errors = undefined
+          this.fetchQuery(newInput)
         }
       },
       deep: true,
@@ -249,14 +249,10 @@ export default {
     },
     single: {
       handler(newSingle) {
-        console.info("Single changed in Results component");
-        if (newSingle) {
-          // Clear previous results first
-          this.results = undefined;
-          this.errors = undefined;
-          
-          // Then fetch new data
-          this.fetchSingleQuery(newSingle);
+        if (newSingle && !this.input) {
+          this.results = undefined
+          this.errors = undefined
+          this.fetchSingleQuery(newSingle)
         }
       },
       deep: true,

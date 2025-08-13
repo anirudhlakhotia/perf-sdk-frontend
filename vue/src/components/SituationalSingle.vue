@@ -12,7 +12,7 @@
           <i class="bi bi-arrow-left"></i> Back to situational results
         </b-button>
 
-        <b-button variant="outline-secondary" class="mr-2" v-on:click="this.refreshData()">
+        <b-button variant="outline-secondary" class="mr-2" v-on:click="this.refreshData()" :disabled="isLoading">
           <i class="bi bi-arrow-clockwise"></i> Refresh
         </b-button>
       </div>
@@ -118,6 +118,8 @@ export default {
       errorsSummary: undefined,
       hideEventsButton: false,
       events: undefined,
+      isLoading: false,
+      resultsKey: 0,
 
       input: {
         yAxes: this.$route.query.yAxis ?? [
@@ -183,6 +185,7 @@ export default {
       this.errors = undefined;
       this.errorsSummary = undefined;
       this.events = undefined;
+      this.resultsKey++;
     },
     
     refreshData() {
@@ -220,10 +223,15 @@ export default {
             })
           })
 
-      if (res.status.toString().startsWith('2')) {
-        this.results = await res.json();
-      } else {
-        this.errors = await res.json()
+      try {
+        if (res.status.toString().startsWith('2')) {
+          this.results = await res.json();
+        } else {
+          const err = await res.json().catch(() => ({ message: res.statusText }))
+          this.errors = err?.message || JSON.stringify(err) || `HTTP ${res.status}`
+        }
+      } catch(e) {
+        this.errors = e?.message || 'Unknown error'
       }
       return res;
     },
@@ -242,10 +250,15 @@ export default {
             })
           })
 
-      if (res.status.toString().startsWith('2')) {
-        this.errorsSummary = await res.json();
-      } else {
-        this.errors = await res.json()
+      try {
+        if (res.status.toString().startsWith('2')) {
+          this.errorsSummary = await res.json();
+        } else {
+          const err = await res.json().catch(() => ({ message: res.statusText }))
+          this.errors = err?.message || JSON.stringify(err) || `HTTP ${res.status}`
+        }
+      } catch(e) {
+        this.errors = e?.message || 'Unknown error'
       }
     },
 
@@ -263,10 +276,15 @@ export default {
             })
           })
 
-      if (res.status.toString().startsWith('2')) {
-        this.events = await res.json();
-      } else {
-        this.errors = await res.json()
+      try {
+        if (res.status.toString().startsWith('2')) {
+          this.events = await res.json();
+        } else {
+          const err = await res.json().catch(() => ({ message: res.statusText }))
+          this.errors = err?.message || JSON.stringify(err) || `HTTP ${res.status}`
+        }
+      } catch(e) {
+        this.errors = e?.message || 'Unknown error'
       }
     },
 
