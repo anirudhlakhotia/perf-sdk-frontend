@@ -31,18 +31,24 @@
 
       <div v-else-if="results" :key="'results-' + resultsKey">
         <!--      {{JSON.stringify(results)}}-->
+        <table class="table text-left table-striped table-sm table-responsive mt-5">
+          <thead class="font-weight-bold">
+          <tr>
+            <td>Run</td>
+            <td>Started</td>
+            <td>Description</td>
+            <td>Score</td>
+          </tr>
+          </thead>
           <tr v-for="r in results.runs" :key="r.runId">
             <td v-bind:style="{color: r.color}">
-              <a href="#" v-on:click="runClicked(r.runId)">
-                {{ r.runId }}
-              </a>
+              <a href="#" @click.prevent="runClicked(r.runId)">{{ r.runId }}</a>
             </td>
             <td>{{ r.started }}</td>
             <td>{{ r.runParams?.workload?.situational }}</td>
-            <td>{{ r.srjParams?.score ?? "N/A" }}</td>
+            <td>{{ r.srjParams?.score ?? 'N/A' }}</td>
           </tr>
         </table>
-
       </div>
     </transition>
   </b-container>
@@ -100,7 +106,7 @@ export default {
       }
     },
     fetchQuery: async function (situationalRunId) {
-        const res = await fetch(`${document.location.protocol}//${document.location.hostname}:3002/dashboard/situationalRun`,
+        const res = await fetch(`/dashboard/situationalRun`,
             {
               headers: {
                 'Accept': 'application/json',

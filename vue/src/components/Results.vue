@@ -1,9 +1,6 @@
 <template>
   <div class="mb-5">
-    <!-- Hack to force this to update when input changes.  Not sure if better way to achieve. -->
-    <div style="display: none">
-      {{ JSON.stringify(input) }}
-    </div>
+    <!-- Removed hack that forced updates via JSON.stringify(input) -->
 
     <div v-if="!results && !errors" class="text-center">
       <b-spinner variant="primary"></b-spinner>
@@ -52,8 +49,8 @@
         </b-button>
 
         <div>
-          <b-form-select v-model="defaultDisplay" v-on:change="(ev) => displayChanged(ev)">
-            <option :selected="true">duration_average_us</option>
+          <b-form-select v-model="defaultDisplay">
+            <option>duration_average_us</option>
             <option>duration_min_us</option>
             <option>duration_max_us</option>
             <option>duration_p50_us</option>
@@ -137,8 +134,11 @@ export default {
   },
   methods: {
     displayChanged: async function(display) {
-      const newInput = {... this.input }
-      newInput.yAxes[0].column = display
+      // Clone to avoid mutating prop (which triggers deep watchers endlessly)
+      const newInput = JSON.parse(JSON.stringify(this.input || {}))
+      if (newInput?.yAxes?.[0]) {
+        newInput.yAxes[0].column = display
+      }
       await this.fetchQuery(newInput)
     },
 
@@ -168,6 +168,10 @@ export default {
               const err = await res.json().catch(() => ({ message: res.statusText }))
               this.errors = err?.message || JSON.stringify(err) || `HTTP ${res.status}`
             }
+          }
+        } catch (e) {
+          if (reqId === this.lastRequestId) {
+            this.errors = e?.message || 'Network error'
           }
         } finally {
           this.isReloading = false
@@ -199,6 +203,10 @@ export default {
             const err = await res.json().catch(() => ({ message: res.statusText }))
             this.errors = err?.message || JSON.stringify(err) || `HTTP ${res.status}`
           }
+        }
+      } catch (e) {
+        if (reqId === this.lastRequestId) {
+          this.errors = e?.message || 'Network error'
         }
       } finally {
         this.isReloading = false
@@ -236,6 +244,10 @@ export default {
   },
   props: ['input', 'single'],
   watch: {
+    // Use v-model watch rather than DOM change events to avoid duplicate triggers
+    defaultDisplay(newVal) {
+      this.displayChanged(newVal)
+    },
     input: {
       handler(newInput) {
         if (newInput && !this.single) {
@@ -244,7 +256,8 @@ export default {
           this.fetchQuery(newInput)
         }
       },
-      deep: true,
+      // Watch by reference only; child should not react to nested mutations of parent input
+      deep: false,
       immediate: true
     },
     single: {
@@ -255,7 +268,7 @@ export default {
           this.fetchSingleQuery(newSingle)
         }
       },
-      deep: true,
+      deep: false,
       immediate: true
     }
   }

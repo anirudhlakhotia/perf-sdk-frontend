@@ -25,7 +25,18 @@ export default defineConfig({
         port: 8080,
         https,
         hmr: {
-            clientPort: 443
+            // Use 443 only when running with HTTPS (prod-like). Otherwise use local dev port.
+            clientPort: https ? 443 : 8080
+        },
+        // Dev-only proxy so relative API calls like /dashboard/* work locally
+        // to the Nest backend running on :3002
+        proxy: {
+            '/dashboard': {
+                target: 'http://localhost:3002',
+                changeOrigin: true,
+                // Keep the /dashboard prefix for Nest routes
+                rewrite: (p) => p
+            }
         }
     },
     plugins: [
