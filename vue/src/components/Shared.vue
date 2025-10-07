@@ -114,12 +114,13 @@ export default {
 export const defaultCluster = {
   "type": "unmanaged",
   "memory": 28000,
-  "storage": "couchstore",
   "version": "7.1.1-3175-enterprise",
   "cpuCount": 16,
   "replicas": 0,
   "nodeCount": 1,
-  "connectionString": "couchbase://localhost"
+  // We intentionally no longer match on:
+  // connectionString, as it was excluding FaaS results (they run against cbdino).  However, it is likely to mean requiring a different way to handle CNG later.
+  // storage, as it also excluded FaaS results.
 }
 
 // This is localhost CNG.
