@@ -37,8 +37,6 @@ export const DEFAULT_CLUSTERS = ['8.0.0-3777-enterprise'] as const
 export const AVAILABLE_CLUSTER_VERSIONS = [
   '8.0.0-3777-enterprise',
   '7.1.1-3175-enterprise',
-  '7.0.3-7031-enterprise',
-  '6.6.6-9213-enterprise',
   // Add new versions here as they become available
 ] as const
 
