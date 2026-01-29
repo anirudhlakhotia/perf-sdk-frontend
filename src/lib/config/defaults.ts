@@ -9,34 +9,35 @@
 // ==========================================
 
 /**
- * Default cluster configuration - consolidates 3 duplicate definitions
- * EXACT Vue dashboard cluster definition - MUST MATCH Shared.vue defaultCluster
+ * Default cluster configuration.
  * Used by dashboard service, API service, and legacy dashboard client
  */
 export const DEFAULT_CLUSTER = {
   type: "unmanaged",
   memory: 28000,
-  storage: "couchstore", 
-  version: "7.1.1-3175-enterprise",
+  version: "8.0.0-3777-enterprise",
   cpuCount: 16,
   replicas: 0,
   nodeCount: 1,
-  connectionString: "couchbase://localhost",
+  // We intentionally no longer match on:
+  // * connectionString, as it was excluding FaaS results (they run against cbdino).  However, it is likely to mean requiring a different way to handle CNG later.
+  // * storage, as it also excluded FaaS results, and we do no storage-specific testing (currently).
 } as const
 
 /**
  * Default cluster versions for UI components
  * Used in dropdowns and initial selections
  */
-export const DEFAULT_CLUSTERS = ['7.1.1-3175-enterprise'] as const
+export const DEFAULT_CLUSTERS = ['8.0.0-3777-enterprise'] as const
 
 /**
  * Available cluster versions for selection
  * Extend this list as new versions become available
  */
 export const AVAILABLE_CLUSTER_VERSIONS = [
+  '8.0.0-3777-enterprise',
   '7.1.1-3175-enterprise',
-  '7.0.3-7031-enterprise', 
+  '7.0.3-7031-enterprise',
   '6.6.6-9213-enterprise',
   // Add new versions here as they become available
 ] as const
